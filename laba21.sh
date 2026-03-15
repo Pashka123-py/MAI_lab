@@ -36,7 +36,7 @@ for file in "$TARGET_DIR"/*; do
             
             path_old=$(dirname "$file")
             new_path="${path_old}/${new_name}"
-            echo "$new_path"
+            echo "$name -> $new_name"
             mv "$file" "$new_path"  
             
         fi
