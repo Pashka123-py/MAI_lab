@@ -1,9 +1,16 @@
 #!/bin/bash
 
-file_size=40
+# Определяем директорию, в которой находится сам скрипт
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Формируем путь к искомой папке test
+TARGET_DIR="$SCRIPT_DIR/test_2"
+
+# В этой переменной можем задать произвольный размер для отбора файлов
+file_size=40  
 
 
-for file in /root/programms_c/test_1/*; do
+for file in "$TARGET_DIR"/*; do
     if [ -f "$file" ]; then
 
         size=$(stat -c%s "$file")
