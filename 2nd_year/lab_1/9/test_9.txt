@@ -1,0 +1,24 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_9 lab_1_9.c
+
+
+# --- часть 1 ---
+./lab_1_9 part1 -10 10
+./lab_1_9 part1 0 100
+./lab_1_9 part1 -1000 1000
+./lab_1_9 part1 5 5
+./lab_1_9 part1 -1 1
+
+# --- часть 2 ---
+./lab_1_9 part2
+./lab_1_9 part2
+./lab_1_9 part2
+
+# --- ошибки ---
+./lab_1_9
+./lab_1_9 part1
+./lab_1_9 part1 5
+./lab_1_9 part1 abc 10
+./lab_1_9 part1 5 abc
+./lab_1_9 part1 10 5
+./lab_1_9 part2 extra
+./lab_1_9 unknown

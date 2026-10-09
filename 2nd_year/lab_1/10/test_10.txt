@@ -1,0 +1,54 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_10 lab_1_10.c
+
+
+# --- base 10: простые числа ---
+printf '10\n123\n-45\n0\n700\nStop\n' | ./lab_1_10
+
+# --- base 16 ---
+printf '16\nFF\n-A\n10\nStop\n' | ./lab_1_10
+
+# --- base 2 ---
+printf '2\n1010\n-111\n0\nStop\n' | ./lab_1_10
+
+# --- base 36 ---
+printf '36\nZ\nZZ\n-1\nStop\n' | ./lab_1_10
+
+# --- base 9 ---
+printf '9\n888\n-12\n0\nStop\n' | ./lab_1_10
+
+# --- base 18 ---
+printf '18\nG7\n-AA\n1\nStop\n' | ./lab_1_10
+
+# --- base 27 ---
+printf '27\nQQ\n-1\nA\nStop\n' | ./lab_1_10
+
+# --- строчные буквы (ошибка, пропуск) ---
+printf '16\nff\nFF\nStop\n' | ./lab_1_10
+
+# --- невалидная цифра для базы ---
+printf '10\n12A\n123\nStop\n' | ./lab_1_10
+
+# --- только Stop, без чисел ---
+printf '10\nStop\n' | ./lab_1_10
+
+# --- пустые строки между числами ---
+printf '10\n\n42\n\n\nStop\n' | ./lab_1_10
+
+# --- большие числа (на грани LLONG_MAX) ---
+printf '10\n9223372036854775807\n1\nStop\n' | ./lab_1_10
+
+# --- большие числа (переполнение суммы) ---
+printf '10\n9223372036854775807\n9223372036854775807\nStop\n' | ./lab_1_10
+
+# --- невалидное основание ---
+printf '1\n' | ./lab_1_10
+printf '37\n' | ./lab_1_10
+printf '0\n' | ./lab_1_10
+printf 'abc\n' | ./lab_1_10
+printf '\n' | ./lab_1_10
+
+# --- пустой ввод (EOF сразу) ---
+printf '' | ./lab_1_10
+
+# --- только число, без Stop (EOF вместо Stop) ---
+printf '10\n42\n' | ./lab_1_10

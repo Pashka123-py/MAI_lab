@@ -1,0 +1,88 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_5 lab_1_5.c -lm
+
+
+# --- часть 1: суммы ---
+
+# a: sum x^n / n! = e^x
+./lab_1_5 sum_a 1e-9 1.0
+./lab_1_5 sum_a 1e-9 0.0
+./lab_1_5 sum_a 1e-9 2.5
+./lab_1_5 sum_a 1e-9 -1.5
+./lab_1_5 sum_a 1e-9 10.0
+./lab_1_5 sum_a 1e-6 3.0
+./lab_1_5 sum_a 1e-12 1.0
+
+# b: sum (-1)^n x^(2n) / (2n)! = cos(x)
+./lab_1_5 sum_b 1e-9 0.0
+./lab_1_5 sum_b 1e-9 1.5707963
+./lab_1_5 sum_b 1e-9 3.1415926
+./lab_1_5 sum_b 1e-9 10.0
+./lab_1_5 sum_b 1e-6 0.5
+./lab_1_5 sum_b 1e-12 1.0
+
+# c: sum 3^(3n) (n!)^3 x^(2n) / (3n)!
+./lab_1_5 sum_c 1e-9 0.5
+./lab_1_5 sum_c 1e-9 1.0
+./lab_1_5 sum_c 1e-9 -1.0
+./lab_1_5 sum_c 1e-6 0.1
+./lab_1_5 sum_c 1e-12 0.5
+
+# d: sum (-1)^n (2n-1)!! x^(2n) / (2n)!!
+./lab_1_5 sum_d 1e-9 0.3
+./lab_1_5 sum_d 1e-9 0.5
+./lab_1_5 sum_d 1e-9 0.99
+./lab_1_5 sum_d 1e-6 0.1
+./lab_1_5 sum_d 1e-12 0.5
+
+# --- часть 2: интегралы ---
+
+# a: int_0^1 ln(1+x)/x dx = pi^2/12 ~ 0.8224670334
+./lab_1_5 int_a 1e-6
+./lab_1_5 int_a 1e-9
+./lab_1_5 int_a 1e-12
+
+# b: int_0^1 e^(-x^2/2) dx ~ 0.8556243919
+./lab_1_5 int_b 1e-6
+./lab_1_5 int_b 1e-9
+./lab_1_5 int_b 1e-12
+
+# c: int_0^1 -ln(1-x) dx = 1
+./lab_1_5 int_c 1e-6
+./lab_1_5 int_c 1e-9
+./lab_1_5 int_c 1e-12
+
+# d: int_0^1 x^x dx ~ 0.7834305107
+./lab_1_5 int_d 1e-6
+./lab_1_5 int_d 1e-9
+./lab_1_5 int_d 1e-12
+
+# --- ошибки ---
+
+# нет аргументов / мало аргументов
+./lab_1_5
+./lab_1_5 sum_a
+./lab_1_5 sum_a 1e-9
+./lab_1_5 int_a
+
+# неверные eps
+./lab_1_5 sum_a 0 1.0
+./lab_1_5 sum_a 1.5 1.0
+./lab_1_5 sum_a -1e-9 1.0
+./lab_1_5 sum_a 1e-20 1.0
+./lab_1_5 int_a 0
+./lab_1_5 int_a 1.5
+
+# неверные числа
+./lab_1_5 sum_a 1e-9 abc
+./lab_1_5 sum_a 1e-9 12abc
+./lab_1_5 sum_a abc 1.0
+
+# неизвестные команды / имена
+./lab_1_5 sum_x 1e-9 1.0
+./lab_1_5 int_x 1e-9
+./lab_1_5 unknown 1e-9 1.0
+./lab_1_5 sum_a 1e-9 1.0 extra
+
+# лишние аргументы
+./lab_1_5 sum_a 1e-9 1.0 extra
+./lab_1_5 int_a 1e-9 extra

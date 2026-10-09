@@ -1,0 +1,38 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_7 lab_1_7.c
+
+
+Set-Content -Path f1.txt   -Value "alpha beta`n  gamma	delta" -Encoding ascii -NoNewline
+Set-Content -Path f2.txt   -Value "one two three four five six"  -Encoding ascii -NoNewline
+Set-Content -Path f1s.txt  -Value "only1"                        -Encoding ascii -NoNewline
+Set-Content -Path f2s.txt  -Value "only2"                        -Encoding ascii -NoNewline
+Set-Content -Path a_in.txt -Value "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor" -Encoding ascii -NoNewline
+
+
+
+# --- -r : чередование ---
+./lab_1_7 -r f1.txt f2.txt out_r1.txt
+./lab_1_7 -r f2.txt f1.txt out_r2.txt
+./lab_1_7 /r f1.txt f2.txt out_r3.txt
+./lab_1_7 -r f1s.txt f2.txt out_r4.txt
+./lab_1_7 -r f1.txt f2s.txt out_r5.txt
+./lab_1_7 -r f1s.txt f2s.txt out_r6.txt
+
+# --- -a : преобразование лексем ---
+./lab_1_7 -a a_in.txt out_a1.txt
+./lab_1_7 /a a_in.txt out_a2.txt
+./lab_1_7 -a f1.txt out_a3.txt
+
+# --- ошибки ---
+./lab_1_7
+./lab_1_7 -r
+./lab_1_7 -r f1.txt
+./lab_1_7 -r f1.txt f2.txt
+./lab_1_7 -r f1.txt f2.txt out.txt extra
+./lab_1_7 -a
+./lab_1_7 -a a_in.txt
+./lab_1_7 -a a_in.txt out.txt extra
+./lab_1_7 -x f1.txt f2.txt out.txt
+./lab_1_7 r f1.txt f2.txt out.txt
+./lab_1_7 -rr f1.txt f2.txt out.txt
+./lab_1_7 -r no1.txt f2.txt out.txt
+./lab_1_7 -a no_such.txt out.txt

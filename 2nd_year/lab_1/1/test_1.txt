@@ -1,0 +1,53 @@
+# --- build ---
+gcc -std=c99 -Wall -Wextra -pedantic -o lab1 lab_1_1.c
+
+# --- -h : multiples of x up to 100 ---
+./lab1 7 -h
+./lab1 100 -h
+./lab1 150 -h
+./lab1 1 -h
+./lab1 7 /h
+
+# --- -p : prime / composite ---
+./lab1 17 -p
+./lab1 18 -p
+./lab1 2 -p
+./lab1 1 -p
+./lab1 1000000007 -p
+
+# --- -s : hex digits ---
+./lab1 255 -s
+./lab1 256 -s
+./lab1 3054 -s
+./lab1 10 -s
+
+# --- -e : power table (x <= 10) ---
+./lab1 1 -e
+./lab1 3 -e
+./lab1 10 -e
+
+# --- -a : sum 1..x ---
+./lab1 1 -a
+./lab1 100 -a
+
+# --- -f : factorial ---
+./lab1 1 -f
+./lab1 10 -f
+./lab1 20 -f
+
+# --- error cases ---
+./lab1
+./lab1 5
+./lab1 5 -h extra
+./lab1 0 -h
+./lab1 -5 -h
+./lab1 abc -p
+./lab1 12abc -p
+./lab1 3.5 -a
+./lab1 18446744073709551616 -h
+./lab1 5 -x
+./lab1 5 h
+./lab1 5 -hh
+./lab1 11 -e
+./lab1 21 -f
+./lab1 18446744073709551615 -a

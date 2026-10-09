@@ -1,0 +1,28 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_8 lab_1_8.c
+
+
+Set-Content -Path in8.txt -Value "101 123 7F Z 0 00 007 FF zz abc 10 1A" -Encoding ascii -NoNewline
+Set-Content -Path in8b.txt -Value "1010`n  111  1001	10 11 100" -Encoding ascii -NoNewline
+Set-Content -Path in8err.txt -Value "101 @#$ 123" -Encoding ascii -NoNewline
+
+
+# --- основной набор ---
+./lab_1_8 in8.txt out8.txt
+cat out8.txt
+
+# --- только двоичные ---
+./lab_1_8 in8b.txt out8b.txt
+cat out8b.txt
+
+# --- с ошибкой (недопустимый символ) ---
+./lab_1_8 in8err.txt out8err.txt
+echo "exit code: $?"
+
+# --- несуществующий файл ---
+./lab_1_8 no_such.txt out.txt
+echo "exit code: $?"
+
+# --- мало аргументов ---
+./lab_1_8
+./lab_1_8 in8.txt
+./lab_1_8 in8.txt out.txt extra

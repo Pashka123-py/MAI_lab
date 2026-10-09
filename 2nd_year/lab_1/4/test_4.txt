@@ -1,0 +1,42 @@
+gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_4 lab_1_4.c
+
+
+"Hello 123 World!`nTest line 42.`n!!!" | Out-File -Encoding ascii -NoNewline in1.txt
+"abc`tdef   ghi`nline2: with punctuation, 99" | Out-File -Encoding ascii -NoNewline in2.txt
+"No digits here`nABC xyz 000" | Out-File -Encoding ascii -NoNewline in3.txt
+
+
+# --- -d : удалить цифры (авто out_in1.txt) ---
+./lab_1_4 -d in1.txt
+./lab_1_4 /d in1.txt
+./lab_1_4 -d in2.txt
+
+# --- -i : латинские буквы в строке ---
+./lab_1_4 -i in1.txt
+./lab_1_4 /i in2.txt
+
+# --- -s : прочие символы в строке ---
+./lab_1_4 -s in1.txt
+./lab_1_4 /s in2.txt
+
+# --- -a : не-цифры в hex ---
+./lab_1_4 -a in1.txt
+./lab_1_4 /a in3.txt
+
+# --- явное имя выходного файла (nd, ni, ns, na) ---
+./lab_1_4 -nd in1.txt out_d.txt
+./lab_1_4 /ni in1.txt out_i.txt
+./lab_1_4 -ns in2.txt out_s.txt
+./lab_1_4 /na in3.txt out_a.txt
+
+# --- ошибки ---
+./lab_1_4
+./lab_1_4 -d
+./lab_1_4 -d in1.txt extra.txt
+./lab_1_4 -nd in1.txt
+./lab_1_4 -x in1.txt
+./lab_1_4 d in1.txt
+./lab_1_4 --d in1.txt
+./lab_1_4 -dd in1.txt
+./lab_1_4 -d no_such_file.txt
+./lab_1_4 -d in1.txt /root/forbidden.txt
