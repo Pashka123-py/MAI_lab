@@ -3,7 +3,6 @@
 #include <string.h>
 #include <stdarg.h>
 #include <math.h>
-#include <errno.h>
 #include <float.h>
 
 /* статус-коды */
@@ -417,10 +416,9 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    errno = 0;
     char *end = NULL;
     long n = strtol(argv[1], &end, 10);
-    if (end == argv[1] || *end != '\0' || errno == ERANGE) {
+    if (end == argv[1] || *end != '\0' || n == LONG_MAX || n == LONG_MIN) {
         fprintf(stderr, "Error: invalid number\n");
         return 2;
     }
