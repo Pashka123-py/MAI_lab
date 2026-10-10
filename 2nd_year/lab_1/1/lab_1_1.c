@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <ctype.h>
 #include <limits.h>
 #include <stddef.h>
@@ -54,10 +53,9 @@ status_t parse_natural(const char *str, unsigned long long *out)
     if (str == NULL || out == NULL) return ERR_NULLPTR;
     if (!isdigit((unsigned char)str[0])) return ERR_NUMBER;
 
-    errno = 0;
     value = strtoull(str, &end, 10);
-    if (errno == ERANGE) return ERR_OVERFLOW;
     if (end == str || *end != '\0') return ERR_NUMBER;
+    if (value == ULLONG_MAX) return ERR_OVERFLOW;   /* переполнение (errno не используется) */
     if (value == 0) return ERR_NUMBER;
 
     *out = value;
