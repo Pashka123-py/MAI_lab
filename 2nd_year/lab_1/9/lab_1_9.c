@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <errno.h>
 #include <limits.h>
 
 #define FIXED_N 100
@@ -21,11 +20,10 @@ typedef enum {
 /* разбор long */
 static status_t parse_long(const char *s, long *out) {
     if (!s || !out || *s == '\0') return ST_ERR_NUM;
-    errno = 0;
     char *end = NULL;
     long v = strtol(s, &end, 10);
     if (end == s || *end != '\0') return ST_ERR_NUM;
-    if (errno == ERANGE) return ST_ERR_NUM;
+    if (v == LONG_MAX || v == LONG_MIN) return ST_ERR_NUM;
     *out = v;
     return ST_OK;
 }
