@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 #include <limits.h>
 
 #define MAX_LINE 4096
@@ -122,10 +121,9 @@ int main(void) {
     size_t L = strlen(line);
     while (L > 0 && (line[L-1] == '\n' || line[L-1] == '\r')) line[--L] = '\0';
 
-    errno = 0;
     char *end = NULL;
     long base = strtol(line, &end, 10);
-    if (end == line || *end != '\0' || errno == ERANGE) {
+    if (end == line || *end != '\0' || base == LONG_MAX || base == LONG_MIN) {
         fprintf(stderr, "Error: invalid base\n");
         return 2;
     }
