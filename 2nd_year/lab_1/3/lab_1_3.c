@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <errno.h>
 #include <ctype.h>
 #include <float.h>
 
@@ -21,11 +20,10 @@ typedef enum {
 /* разбор вещественного */
 static status_t parse_double(const char *s, double *out) {
     if (!s || !out || *s == '\0') return ST_ERR_NUM_INVALID;
-    errno = 0;
     char *end = NULL;
     double v = strtod(s, &end);
     if (end == s || *end != '\0') return ST_ERR_NUM_INVALID;
-    if (errno == ERANGE) return ST_ERR_NUM_INVALID;
+    if (v == HUGE_VAL || v == -HUGE_VAL) return ST_ERR_NUM_INVALID;
     if (!isfinite(v)) return ST_ERR_NUM_INVALID;
     *out = v;
     return ST_OK;
@@ -34,11 +32,10 @@ static status_t parse_double(const char *s, double *out) {
 /* разбор целого */
 static status_t parse_long(const char *s, long *out) {
     if (!s || !out || *s == '\0') return ST_ERR_NUM_INVALID;
-    errno = 0;
     char *end = NULL;
     long v = strtol(s, &end, 10);
     if (end == s || *end != '\0') return ST_ERR_NUM_INVALID;
-    if (errno == ERANGE) return ST_ERR_NUM_INVALID;
+    if (v == LONG_MAX || v == LONG_MIN) return ST_ERR_NUM_INVALID;
     *out = v;
     return ST_OK;
 }
