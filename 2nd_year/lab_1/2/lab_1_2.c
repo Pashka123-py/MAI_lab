@@ -1,16 +1,7 @@
-/*
- * lab_1_2.c
- * Вычисление констант e, pi, ln2, sqrt(2), gamma с заданной точностью.
- *
- * Компиляция: gcc -std=c99 -Wall -Wextra -pedantic -o lab_1_2 lab_1_2.c -lm
- * Запуск:     ./lab_1_2 <epsilon>
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <errno.h>
 #include <float.h>
 
 /* статус-коды */
@@ -27,11 +18,10 @@ typedef enum {
 /* разбор epsilon */
 static status_t parse_epsilon(const char *s, double *out) {
     if (!s || !out || *s == '\0') return ST_ERR_EPS_INVALID;
-    errno = 0;
     char *end = NULL;
     double v = strtod(s, &end);
     if (end == s || *end != '\0') return ST_ERR_EPS_INVALID;
-    if (errno == ERANGE) return ST_ERR_EPS_RANGE;
+    if (v == HUGE_VAL || v == -HUGE_VAL) return ST_ERR_EPS_RANGE; /* переполнение (errno не используется) */
     if (!(v > 0.0) || v >= 1.0) return ST_ERR_EPS_RANGE;
     if (v < 1e-14) return ST_ERR_EPS_RANGE;
     *out = v;
