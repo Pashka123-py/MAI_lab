@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <errno.h>
 #include <float.h>
 
 /* статус-коды */
@@ -21,11 +20,10 @@ typedef enum {
 /* разбор double */
 static status_t parse_double(const char *s, double *out) {
     if (!s || !out || *s == '\0') return ST_ERR_NUM;
-    errno = 0;
     char *end = NULL;
     double v = strtod(s, &end);
     if (end == s || *end != '\0') return ST_ERR_NUM;
-    if (errno == ERANGE) return ST_ERR_NUM;
+    if (v == HUGE_VAL || v == -HUGE_VAL) return ST_ERR_NUM;
     if (!isfinite(v)) return ST_ERR_NUM;
     *out = v;
     return ST_OK;
