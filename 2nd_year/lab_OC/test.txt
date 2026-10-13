@@ -1,0 +1,13 @@
+gcc -std=c99 -Wall -o lab1.exe lab_os_1.c
+@"
+hello
+abcdefghij
+abcdefghijk
+a b c d e f g h
+"@ | .\lab1.exe out1.txt out2.txt
+Get-Content out1.txt
+Get-Content out2.txt
+
+
+# проверка ошибки открытия файла
+.\lab1.exe "?:\x.txt" out2.txt
