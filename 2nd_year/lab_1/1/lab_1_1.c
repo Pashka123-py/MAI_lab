@@ -55,7 +55,7 @@ status_t parse_natural(const char *str, unsigned long long *out)
 
     value = strtoull(str, &end, 10);
     if (end == str || *end != '\0') return ERR_NUMBER;
-    if (value == ULLONG_MAX) return ERR_OVERFLOW;   /* переполнение (errno не используется) */
+    if (value == ULLONG_MAX) return ERR_OVERFLOW;   // переполнение
     if (value == 0) return ERR_NUMBER;
 
     *out = value;
@@ -75,7 +75,6 @@ status_t parse_flag(const char *str, char *out)
 
 /*computing functions*/
 
-/* -h: multiples of x in the range [1; limit] */
 status_t find_multiples(unsigned long long x, unsigned long long limit,
                         unsigned long long *buf, size_t cap, size_t *count)
 {
@@ -85,7 +84,7 @@ status_t find_multiples(unsigned long long x, unsigned long long limit,
     if (buf == NULL || count == NULL) return ERR_NULLPTR;
     if (x == 0) return ERR_NUMBER;
 
-    for (m = x; m <= limit; m += x) {   /* m <= limit, x <= limit: no overflow */
+    for (m = x; m <= limit; m += x) {
         if (n >= cap) return ERR_BUFFER;
         buf[n++] = m;
     }
