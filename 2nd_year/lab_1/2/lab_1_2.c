@@ -21,7 +21,7 @@ static status_t parse_epsilon(const char *s, double *out) {
     char *end = NULL;
     double v = strtod(s, &end);
     if (end == s || *end != '\0') return ST_ERR_EPS_INVALID;
-    if (v == HUGE_VAL || v == -HUGE_VAL) return ST_ERR_EPS_RANGE; /* переполнение (errno не используется) */
+    if (v == HUGE_VAL || v == -HUGE_VAL) return ST_ERR_EPS_RANGE;
     if (!(v > 0.0) || v >= 1.0) return ST_ERR_EPS_RANGE;
     if (v < 1e-14) return ST_ERR_EPS_RANGE;
     *out = v;
