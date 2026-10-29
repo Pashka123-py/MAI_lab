@@ -1,0 +1,7 @@
+1 Alice Smith 3000.0
+2 Bob Smith 3000.0
+3 John Smith 2000.5
+4 Anna Brown 2000.5
+5 Mike Brown 1000.0
+6 Alice Adams 1000.0
+7 Bob Adams 500.0

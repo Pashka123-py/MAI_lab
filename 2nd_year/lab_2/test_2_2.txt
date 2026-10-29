@@ -1,0 +1,72 @@
+COMPILATION
+
+gcc -std=c99 -Wall -Wextra -Wpedantic -O2 -o lab2 lab_2_2.c
+
+
+EMPLOYEES FILE (employees.txt)
+
+1 Alice Smith 3000.0
+2 Bob Smith 3000.0
+3 John Smith 2000.5
+4 Anna Brown 2000.5
+5 Mike Brown 1000.0
+6 Alice Adams 1000.0
+7 Bob Adams 500.0
+
+
+EXTRA FILES
+
+empty.txt:
+(0 bytes)
+
+invalid.txt:
+-1 Alice Smith 3000
+2 Bob123 Smith 2000
+3 John Smith abc
+4 Anna Smith -50
+5 John Smith 2000.5.5
+
+mixed.txt:
+1 Alice Smith 3000
+2 Bob123 Smith 2000
+-3 John Smith 1500
+4 Anna Smith -50
+5 Mike Brown 500
+
+spaces.txt:
+   1    Alice    Smith    3000.5
+2	Bob	Smith	3000.5
+
+bigid.txt:
+4294967295 Alice Smith 1000
+
+zeroid.txt:
+0 Alice Smith 1000
+
+
+TESTS
+
+./lab2 employees.txt -a out_asc.txt
+./lab2 employees.txt -d out_desc.txt
+./lab2 employees.txt /a out_asc_slash.txt
+./lab2 employees.txt /d out_desc_slash.txt
+
+./lab2 empty.txt    -a out_empty.txt
+./lab2 invalid.txt  -a out_invalid.txt
+./lab2 mixed.txt    -a out_mixed.txt
+./lab2 spaces.txt   -a out_spaces.txt
+./lab2 bigid.txt    -a out_bigid.txt
+./lab2 zeroid.txt   -a out_zeroid.txt
+
+
+ERROR TESTS
+
+./lab2
+./lab2 employees.txt
+./lab2 employees.txt -a
+./lab2 employees.txt -a out.txt extra
+./lab2 no_such_file.txt -a out.txt
+./lab2 employees.txt -x out.txt
+./lab2 employees.txt a out.txt
+./lab2 employees.txt --a out.txt
+./lab2 employees.txt -a C:\no_such_dir\out.txt

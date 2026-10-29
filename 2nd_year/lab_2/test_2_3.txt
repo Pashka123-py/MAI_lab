@@ -1,0 +1,65 @@
+# COMPILATION
+# gcc -std=c99 -Wall -Wextra -Wpedantic -O2 -o lab3 lab_3.c
+
+# NORMAL
+./lab3 "Hello" f1.txt
+./lab3 "world" f1.txt
+./lab3 "line" f1.txt
+./lab3 "Second" f1.txt
+./lab3 "notpresent" f1.txt
+
+./lab3 "abc" f2.txt
+./lab3 "abc" f1.txt f2.txt
+./lab3 "abc" f1.txt f2.txt f3.txt
+./lab3 "a" f1.txt f2.txt f3.txt f4.txt
+./lab3 "xyz" f2.txt f3.txt f4.txt
+./lab3 "notpresent" f1.txt f2.txt f3.txt f4.txt
+
+./lab3 "abc" f1.txt f2.txt f3.txt f4.txt empty.txt f1.txt f2.txt f3.txt f4.txt
+./lab3 "a" f1.txt f2.txt f3.txt f4.txt empty.txt f1.txt f2.txt f3.txt f4.txt f1.txt f2.txt
+./lab3 "line" f1.txt f2.txt f3.txt f4.txt empty.txt f1.txt f2.txt f3.txt f4.txt f1.txt f2.txt f3.txt f4.txt
+
+./lab3 "Hello, world" f1.txt
+./lab3 " " f1.txt
+./lab3 "  " f1.txt
+./lab3 "d!
+S" f1.txt
+./lab3 "abc
+xyz" f2.txt
+./lab3 "	" f1.txt
+
+./lab3 "a" empty.txt
+./lab3 "abc" empty.txt
+
+./lab3 "a" f1.txt
+./lab3 "H" f1.txt
+./lab3 "
+" f1.txt
+
+./lab3 "Hello, world!
+Second line here.
+" f1.txt
+./lab3 "abcabcabc
+xyz abc
+abc
+" f2.txt
+
+./lab3 "a" f2.txt
+./lab3 "abc" f2.txt
+./lab3 "ab" f2.txt
+
+# ERRORS
+./lab3
+./lab3 "abc"
+./lab3 ""
+./lab3 "" f1.txt
+./lab3 "" f1.txt f2.txt
+
+./lab3 "abc" no_such_file.txt
+./lab3 "abc" f1.txt no_such_file.txt
+./lab3 "abc" no_such_file_1.txt no_such_file_2.txt f1.txt
+
+./lab3 "abc" .
+./lab3 "abc" f1.txt .
+
+./lab3 "abc" f_noread.txt
