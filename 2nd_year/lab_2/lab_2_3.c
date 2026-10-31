@@ -14,13 +14,9 @@ enum status {
     STATUS_ERR_SUBSTR
 };
 
-/* Сравнение двух символов */
-static int char_equal(char a, char b) {
-    return a == b;
-}
-
 /* Проверка совпадения подстроки needle длиной needle_len в hay длиной hay_len */
-static int substr_match(const char *hay, size_t hay_len, const char *needle, size_t needle_len) {
+static int substr_match(const char *hay, size_t hay_len,
+                        const char *needle, size_t needle_len) {
     if (needle_len == 0) {
         return 1;
     }
@@ -28,14 +24,14 @@ static int substr_match(const char *hay, size_t hay_len, const char *needle, siz
         return 0;
     }
     for (size_t i = 0; i < needle_len; ++i) {
-        if (!char_equal(hay[i], needle[i])) {
+        if (hay[i] != needle[i]) {
             return 0;
         }
     }
     return 1;
 }
 
-/* Длина C-строки без strlen */
+/* Длина C-строки */
 static size_t str_length(const char *s) {
     size_t len = 0;
     while (s[len] != '\0') {
@@ -99,7 +95,7 @@ static enum status read_file(const char *path, char **out_buf, size_t *out_size)
     return STATUS_OK;
 }
 
-/* Поиск всех вхождений подстроки в одном файле с выводом номеров строк и столбцов */
+/* Поиск всех вхождений подстроки в одном файле */
 static enum status search_in_file(const char *path, const char *needle, size_t needle_len) {
     char *buf = NULL;
     size_t size = 0;
@@ -182,69 +178,15 @@ static enum status search_substr_in_files(const char *substr, int count, ...) {
     return result;
 }
 
-/* Развёртка массива путей в вызов variadic-функции для конкретного count */
-static enum status dispatch_search(const char *substr, int count, char *const *paths) {
-    switch (count) {
-    case 1:
-        return search_substr_in_files(substr, 1, paths[0]);
-    case 2:
-        return search_substr_in_files(substr, 2, paths[0], paths[1]);
-    case 3:
-        return search_substr_in_files(substr, 3, paths[0], paths[1], paths[2]);
-    case 4:
-        return search_substr_in_files(substr, 4, paths[0], paths[1], paths[2], paths[3]);
-    case 5:
-        return search_substr_in_files(substr, 5, paths[0], paths[1], paths[2], paths[3], paths[4]);
-    case 6:
-        return search_substr_in_files(substr, 6, paths[0], paths[1], paths[2], paths[3], paths[4], paths[5]);
-    case 7:
-        return search_substr_in_files(substr, 7, paths[0], paths[1], paths[2], paths[3], paths[4], paths[5], paths[6]);
-    case 8:
-        return search_substr_in_files(substr, 8, paths[0], paths[1], paths[2], paths[3], paths[4], paths[5], paths[6], paths[7]);
-    default:
-        return STATUS_ERR_ARGS;
-    }
-}
-
-/* Обёртка: при count > 8 обрабатываем блоками по 8 через dispatch_search */
-static enum status search_all(const char *substr, int count, char *const *paths) {
-    if (substr == NULL || count < 1 || paths == NULL) {
-        return STATUS_ERR_ARGS;
-    }
-    if (str_length(substr) == 0) {
-        return STATUS_ERR_SUBSTR;
-    }
-
-    enum status result = STATUS_OK;
-    int processed = 0;
-
-    while (processed < count) {
-        int block = count - processed;
-        if (block > 8) {
-            block = 8;
-        }
-
-        enum status st = dispatch_search(substr, block, paths + processed);
-        if (st != STATUS_OK) {
-            result = st;
-        }
-        processed += block;
-    }
-
-    return result;
-}
-
-int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        printf("Usage: %s <substring> <file1> [file2 ...]\n", argv[0]);
-        return 1;
-    }
-
-    const char *substr = argv[1];
-    int file_count = argc - 2;
-    char **paths = &argv[2];
-
-    enum status st = search_all(substr, file_count, paths);
+int main(void) {
+    /* Демонстрация: подстрока и пути к файлам заданы прямо в коде. */
+    const char *substr = "ab\ncd\t ef";   /* содержит \n, \t, пробелы */
+    enum status st = search_substr_in_files(
+        substr, 3,
+        "demo1.txt",
+        "demo2.txt",
+        "demo3.txt"
+    );
 
     switch (st) {
     case STATUS_OK:
