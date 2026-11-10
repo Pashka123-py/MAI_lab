@@ -12,9 +12,7 @@ typedef struct {
     DWORD  pos, len;
 } LineReader;
 
-/*  Вспомогательные функции вывода  */
-
-/* Запись всего буфера в дескриптор (канал, файл, консоль) */
+/* Вспомогательные функции вывода */
 static int write_all(HANDLE h, const char *s, size_t len)
 {
     DWORD written = 0;
@@ -23,14 +21,12 @@ static int write_all(HANDLE h, const char *s, size_t len)
     return 1;
 }
 
-/* Вывод строки в дескриптор (для сообщений) */
 static void out_str(HANDLE h, const char *s)
 {
     DWORD written;
     WriteFile(h, s, (DWORD)strlen(s), &written, NULL);
 }
 
-/* Перевод числа в десятичную строку */
 static void u_to_str(unsigned long v, char *out)
 {
     char tmp[24];
@@ -44,7 +40,6 @@ static void u_to_str(unsigned long v, char *out)
     out[i] = '\0';
 }
 
-/* Вывод кода системной ошибки в stderr */
 static void print_error(const char *where)
 {
     char num[24];
@@ -58,7 +53,6 @@ static void print_error(const char *where)
     out_str(err, ")\r\n");
 }
 
-/* Вывод строки вида "<label><code>" в stdout */
 static void print_code(HANDLE out, const char *label, DWORD code)
 {
     char num[24];
@@ -68,9 +62,6 @@ static void print_code(HANDLE out, const char *label, DWORD code)
     out_str(out, "\r\n");
 }
 
-/*  Чтение строки 
- * Возвращает: 1 - строка прочитана, 0 - конец данных, -1 - ошибка.
- * Символ '\r' пропускается, слишком длинная строка обрезается. */
 static int read_line(LineReader *r, char *line, size_t cap)
 {
     size_t n = 0;
@@ -81,7 +72,6 @@ static int read_line(LineReader *r, char *line, size_t cap)
         if (r->pos >= r->len) {
             DWORD got = 0;
             if (!ReadFile(r->h, r->buf, IO_BUF, &got, NULL)) {
-                /* Закрытый записывающий конец канала - это обычный EOF */
                 if (GetLastError() != ERROR_BROKEN_PIPE)
                     return -1;
                 got = 0;
@@ -106,74 +96,49 @@ static int read_line(LineReader *r, char *line, size_t cap)
     }
 }
 
-/*  Код дочернего процесса  */
-static int run_child(void)
+static void build_child_path(char *out, size_t cap)
 {
-    LineReader r;
-    char buf[MAX_LINE + 2];
-    int rc;
-    HANDLE in  = GetStdHandle(STD_INPUT_HANDLE);
-    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+    char base[MAX_PATH];
+    char *slash;
 
-    if (in == INVALID_HANDLE_VALUE || in == NULL ||
-        out == INVALID_HANDLE_VALUE || out == NULL) {
-        print_error("GetStdHandle");
-        return 1;
+    if (GetModuleFileNameA(NULL, base, sizeof base) == 0) {
+        out[0] = '\0';
+        return;
     }
-    r.h = in;
-    r.pos = 0;
-    r.len = 0;
 
-    while ((rc = read_line(&r, buf, sizeof buf)) == 1) {
-        size_t len = strlen(buf);
-
-        /* Инвертируем строку на месте */
-        for (size_t i = 0; i < len / 2; i++) {
-            char t = buf[i];
-            buf[i] = buf[len - 1 - i];
-            buf[len - 1 - i] = t;
-        }
-
-        if (!write_all(out, buf, len) || !write_all(out, "\r\n", 2)) {
-            print_error("WriteFile");
-            return 1;
-        }
+    strcpy(out, base);
+    slash = strrchr(out, '\\');
+    if (slash == NULL) {
+        strcpy(out, "child.exe");
+        return;
     }
-    if (rc < 0) {
-        print_error("ReadFile");
-        return 1;
-    }
-    return 0;
+    slash[1] = '\0';
+    strcat(out, "child.exe");
 }
 
-/*  Запуск одного ребёнка 
- * Создаёт канал и файл, запускает процесс.
- * В *pipe_write возвращает записывающий конец канала для родителя. */
 static int spawn_child(const char *out_name, HANDLE *pipe_write,
                        PROCESS_INFORMATION *pi)
 {
     SECURITY_ATTRIBUTES sa;
     STARTUPINFOA si;
     HANDLE rd = NULL, wr = NULL, file = INVALID_HANDLE_VALUE;
-    char exe[MAX_PATH];
+    char child_exe[MAX_PATH];
     char cmd[MAX_PATH + 16];
     int ok = 0;
 
     sa.nLength = sizeof sa;
     sa.lpSecurityDescriptor = NULL;
-    sa.bInheritHandle = TRUE;               /* дескрипторы наследуются */
+    sa.bInheritHandle = TRUE;
 
     if (!CreatePipe(&rd, &wr, &sa, 0)) {
         print_error("CreatePipe");
         return 0;
     }
-    /* Записывающий конец ребёнку не нужен, иначе EOF не наступит */
     if (!SetHandleInformation(wr, HANDLE_FLAG_INHERIT, 0)) {
         print_error("SetHandleInformation");
         goto cleanup;
     }
 
-    /* Родитель открывает файл на запись */
     file = CreateFileA(out_name, GENERIC_WRITE, FILE_SHARE_READ, &sa,
                        CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (file == INVALID_HANDLE_VALUE) {
@@ -181,21 +146,22 @@ static int spawn_child(const char *out_name, HANDLE *pipe_write,
         goto cleanup;
     }
 
-    if (GetModuleFileNameA(NULL, exe, sizeof exe) == 0) {
+    build_child_path(child_exe, sizeof child_exe);
+    if (child_exe[0] == '\0') {
         print_error("GetModuleFileName");
         goto cleanup;
     }
-    /* Командная строка: "<путь к exe>" --child */
+
     strcpy(cmd, "\"");
-    strcat(cmd, exe);
-    strcat(cmd, "\" --child");
+    strcat(cmd, child_exe);
+    strcat(cmd, "\"");
 
     ZeroMemory(&si, sizeof si);
     ZeroMemory(pi, sizeof *pi);
     si.cb = sizeof si;
     si.dwFlags = STARTF_USESTDHANDLES;
-    si.hStdInput  = rd;                     /* stdin  = канал */
-    si.hStdOutput = file;                   /* stdout = файл  */
+    si.hStdInput  = rd;
+    si.hStdOutput = file;
     si.hStdError  = GetStdHandle(STD_ERROR_HANDLE);
 
     if (!CreateProcessA(NULL, cmd, NULL, NULL, TRUE, 0, NULL, NULL, &si, pi)) {
@@ -204,18 +170,16 @@ static int spawn_child(const char *out_name, HANDLE *pipe_write,
     }
 
     *pipe_write = wr;
-    wr = NULL;                              /* теперь им владеет вызывающий */
+    wr = NULL;
     ok = 1;
 
 cleanup:
-    /* Эти дескрипторы родителю больше не нужны */
     if (rd != NULL) CloseHandle(rd);
     if (file != INVALID_HANDLE_VALUE) CloseHandle(file);
     if (wr != NULL) CloseHandle(wr);
     return ok;
 }
 
-/*  Код родительского процесса  */
 int main(int argc, char *argv[])
 {
     HANDLE pipe1_w = NULL, pipe2_w = NULL;
@@ -228,9 +192,6 @@ int main(int argc, char *argv[])
     HANDLE hin  = GetStdHandle(STD_INPUT_HANDLE);
     HANDLE hout = GetStdHandle(STD_OUTPUT_HANDLE);
     HANDLE herr = GetStdHandle(STD_ERROR_HANDLE);
-
-    if (argc == 2 && strcmp(argv[1], "--child") == 0)
-        return run_child();
 
     if (argc != 3) {
         out_str(herr, "Usage: lab1.exe <file1> <file2>\r\n");
@@ -245,7 +206,6 @@ int main(int argc, char *argv[])
     if (!spawn_child(argv[1], &pipe1_w, &pi1))
         return 1;
     if (!spawn_child(argv[2], &pipe2_w, &pi2)) {
-        /* Второй не запустился: корректно завершаем первого */
         CloseHandle(pipe1_w);
         WaitForSingleObject(pi1.hProcess, INFINITE);
         CloseHandle(pi1.hProcess);
@@ -262,10 +222,8 @@ int main(int argc, char *argv[])
         size_t len = strlen(line);
         HANDLE target;
 
-        /* Правило фильтрации: длина > 10 -> pipe2, иначе pipe1 */
         target = (len > LIMIT) ? pipe2_w : pipe1_w;
-
-        line[len] = '\n';                   /* разделитель строк в канале */
+        line[len] = '\n';
         if (!write_all(target, line, len + 1)) {
             print_error("WriteFile");
             break;
@@ -274,7 +232,6 @@ int main(int argc, char *argv[])
     if (rc < 0)
         print_error("ReadFile");
 
-    /* Закрываем каналы: дети получат EOF */
     CloseHandle(pipe1_w);
     CloseHandle(pipe2_w);
 
