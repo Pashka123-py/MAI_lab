@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 #define MAX_LEX 4096
 
@@ -99,6 +100,82 @@ static status_t to_decimal(const char *s, int base, unsigned long long *out) {
     return ST_OK;
 }
 
+/* нормализация пути: '\'->'/', схлопывание '/', убирание "./" и ".." */
+static int normalize_path(const char *in, char *out, size_t cap) {
+    if (!in || !out || cap == 0) return -1;
+
+    size_t o = 0;
+    for (size_t i = 0; in[i] != '\0'; ++i) {
+        char c = in[i];
+        if (c == '\\') c = '/';
+        if (c == '/' && o > 0 && out[o - 1] == '/') continue;
+        if (o + 1 >= cap) return -1;
+        out[o++] = c;
+    }
+    out[o] = '\0';
+
+    char *p = out;
+    while (p[0] == '.' && p[1] == '/') p += 2;
+    if (p[0] == '.' && p[1] == '\0') p[0] = '\0';
+    if (p != out) memmove(out, p, strlen(p) + 1);
+
+    char tmp[MAX_LEX * 2];
+    if (strlen(out) >= sizeof(tmp)) return -1;
+    strcpy(tmp, out);
+
+    char *segs[256];
+    int nseg = 0;
+    char *save = NULL;
+    char *tok = strtok_r(tmp, "/", &save);
+    while (tok && nseg < 256) {
+        if (strcmp(tok, ".") == 0) {
+            /* skip */
+        } else if (strcmp(tok, "..") == 0) {
+            if (nseg > 0) --nseg;
+        } else {
+            segs[nseg++] = tok;
+        }
+        tok = strtok_r(NULL, "/", &save);
+    }
+
+    int absolute = (in[0] == '/' || in[0] == '\\');
+    o = 0;
+    if (absolute) { if (o + 1 >= cap) return -1; out[o++] = '/'; }
+    for (int i = 0; i < nseg; ++i) {
+        size_t l = strlen(segs[i]);
+        if (o + l + (i ? 1 : 0) + 1 > cap) return -1;
+        if (i > 0) out[o++] = '/';
+        memcpy(out + o, segs[i], l);
+        o += l;
+    }
+    out[o] = '\0';
+    if (o == 0 && absolute) { out[0] = '/'; out[1] = '\0'; }
+    return 0;
+}
+
+/* 1 — один и тот же файл, 0 — разные */
+static int same_file(const char *a, const char *b) {
+    struct stat sa, sb;
+    int ra = stat(a, &sa);
+    int rb = stat(b, &sb);
+
+    if (ra == 0 && rb == 0) {
+        if (sa.st_dev == sb.st_dev && sa.st_ino == sb.st_ino)
+            return 1;
+        if (!(sa.st_ino == 0 && sb.st_ino == 0))
+            return 0;
+    }
+
+    char na[MAX_LEX * 2], nb[MAX_LEX * 2];
+    if (normalize_path(a, na, sizeof(na)) != 0) return 0;
+    if (normalize_path(b, nb, sizeof(nb)) != 0) return 0;
+#ifdef _WIN32
+    for (char *q = na; *q; ++q) *q = (char)tolower((unsigned char)*q);
+    for (char *q = nb; *q; ++q) *q = (char)tolower((unsigned char)*q);
+#endif
+    return strcmp(na, nb) == 0;
+}
+
 /* обработка одного токена */
 static status_t process_token(FILE *fo, const char *tok) {
     char clean[MAX_LEX];
@@ -121,6 +198,11 @@ int main(int argc, char *argv[]) {
     if (argc != 3) {
         fprintf(stderr, "Usage: %s <input> <output>\n", argv[0]);
         return 1;
+    }
+
+    if (same_file(argv[1], argv[2])) {
+        fprintf(stderr, "Error: input and output are the same file\n");
+        return 5;
     }
 
     FILE *fi = fopen(argv[1], "r");
