@@ -62,6 +62,22 @@ status_t parse_natural(const char *str, unsigned long long *out)
     return OK;
 }
 
+status_t parse_nonnegative(const char *str, unsigned long long *out)
+{
+    char *end = NULL;
+    unsigned long long value;
+
+    if (str == NULL || out == NULL) return ERR_NULLPTR;
+    if (!isdigit((unsigned char)str[0])) return ERR_NUMBER;
+
+    value = strtoull(str, &end, 10);
+    if (end == str || *end != '\0') return ERR_NUMBER;
+    if (value == ULLONG_MAX) return ERR_OVERFLOW;
+
+    *out = value;
+    return OK;
+}
+
 status_t parse_flag(const char *str, char *out)
 {
     if (str == NULL || out == NULL) return ERR_NULLPTR;
@@ -179,7 +195,6 @@ status_t factorial(unsigned long long x, unsigned long long *result)
     unsigned long long r = 1, i;
 
     if (result == NULL) return ERR_NULLPTR;
-    if (x == 0) return ERR_NUMBER;
 
     for (i = 2; i <= x; i++) {
         if (r > ULLONG_MAX / i) return ERR_OVERFLOW;
@@ -258,12 +273,17 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    st = parse_natural(argv[1], &x);
+    st = parse_flag(argv[2], &flag);
     if (st != OK) {
         fprintf(stderr, "Error: %s\n", status_message(st));
         return 1;
     }
-    st = parse_flag(argv[2], &flag);
+
+    if (flag == 'f')
+        st = parse_nonnegative(argv[1], &x);
+    else
+        st = parse_natural(argv[1], &x);
+
     if (st != OK) {
         fprintf(stderr, "Error: %s\n", status_message(st));
         return 1;
