@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <sys/stat.h>
 
 #define MAX_LEX 4096
 
-/* статус-коды */
 typedef enum {
     ST_OK = 0,
     ST_ERR_ARGC,
@@ -17,7 +17,6 @@ typedef enum {
     ST_ERR_UNKNOWN
 } status_t;
 
-/* разбор флага */
 static status_t parse_flag(const char *arg, char *act) {
     if (!arg || !act) return ST_ERR_FLAG;
     if (arg[0] != '-' && arg[0] != '/') return ST_ERR_FLAG;
@@ -27,7 +26,6 @@ static status_t parse_flag(const char *arg, char *act) {
     return ST_OK;
 }
 
-/* чтение лексемы: 1 - ok, 0 - eof, -1 - error, -2 - too long */
 static int read_lexeme(FILE *f, char *buf, size_t cap) {
     int c;
     do {
@@ -52,20 +50,94 @@ static int read_lexeme(FILE *f, char *buf, size_t cap) {
     return 1;
 }
 
-/* запись строки */
 static status_t write_str(FILE *f, const char *s) {
     if (fputs(s, f) == EOF) return ST_ERR_WRITE;
     return ST_OK;
 }
 
-/* запись символа */
 static status_t write_ch(FILE *f, int c) {
     if (fputc(c, f) == EOF) return ST_ERR_WRITE;
     return ST_OK;
 }
 
-/* -r: чередование лексем */
+static int normalize_path(const char *in, char *out, size_t cap) {
+    if (!in || !out || cap == 0) return -1;
+
+    size_t o = 0;
+    for (size_t i = 0; in[i] != '\0'; ++i) {
+        char c = in[i];
+        if (c == '\\') c = '/';
+        if (c == '/' && o > 0 && out[o - 1] == '/') continue;
+        if (o + 1 >= cap) return -1;
+        out[o++] = c;
+    }
+    out[o] = '\0';
+
+    char *p = out;
+    while (p[0] == '.' && p[1] == '/') p += 2;
+    if (p[0] == '.' && p[1] == '\0') p[0] = '\0';
+    if (p != out) memmove(out, p, strlen(p) + 1);
+
+    char tmp[MAX_LEX * 2];
+    if (strlen(out) >= sizeof(tmp)) return -1;
+    strcpy(tmp, out);
+
+    char *segs[256];
+    int nseg = 0;
+    char *save = NULL;
+    char *tok = strtok_r(tmp, "/", &save);
+    while (tok && nseg < 256) {
+        if (strcmp(tok, ".") == 0) {
+            /* skip */
+        } else if (strcmp(tok, "..") == 0) {
+            if (nseg > 0) --nseg;
+        } else {
+            segs[nseg++] = tok;
+        }
+        tok = strtok_r(NULL, "/", &save);
+    }
+
+    int absolute = (in[0] == '/' || in[0] == '\\');
+    o = 0;
+    if (absolute) { if (o + 1 >= cap) return -1; out[o++] = '/'; }
+    for (int i = 0; i < nseg; ++i) {
+        size_t l = strlen(segs[i]);
+        if (o + l + (i ? 1 : 0) + 1 > cap) return -1;
+        if (i > 0) out[o++] = '/';
+        memcpy(out + o, segs[i], l);
+        o += l;
+    }
+    out[o] = '\0';
+    if (o == 0 && absolute) { out[0] = '/'; out[1] = '\0'; }
+    return 0;
+}
+
+static int same_file(const char *a, const char *b) {
+    struct stat sa, sb;
+    int ra = stat(a, &sa);
+    int rb = stat(b, &sb);
+
+    if (ra == 0 && rb == 0) {
+        if (sa.st_dev == sb.st_dev && sa.st_ino == sb.st_ino)
+            return 1;
+        if (!(sa.st_ino == 0 && sb.st_ino == 0))
+            return 0;
+    }
+
+    char na[MAX_LEX * 2], nb[MAX_LEX * 2];
+    if (normalize_path(a, na, sizeof(na)) != 0) return 0;
+    if (normalize_path(b, nb, sizeof(nb)) != 0) return 0;
+#ifdef _WIN32
+    for (char *q = na; *q; ++q) *q = (char)tolower((unsigned char)*q);
+    for (char *q = nb; *q; ++q) *q = (char)tolower((unsigned char)*q);
+#endif
+    return strcmp(na, nb) == 0;
+}
+
 static status_t cmd_r(const char *in1, const char *in2, const char *out) {
+    if (same_file(in1, out) || same_file(in2, out))
+        return ST_ERR_ARGC;
+
     FILE *f1 = fopen(in1, "r");
     if (!f1) return ST_ERR_OPEN;
     FILE *f2 = fopen(in2, "r");
@@ -114,7 +186,6 @@ static status_t cmd_r(const char *in1, const char *in2, const char *out) {
     return st;
 }
 
-/* перевод числа в base 4 или 8 */
 static void to_base(unsigned v, int base, char *out) {
     char tmp[64];
     int k = 0;
@@ -127,7 +198,6 @@ static void to_base(unsigned v, int base, char *out) {
     out[k] = '\0';
 }
 
-/* вывод лексемы с преобразованием */
 static status_t print_lex(FILE *fo, const char *lex, int base_code, int to_lower) {
     char tmp[MAX_LEX];
     size_t n = strlen(lex);
@@ -158,8 +228,10 @@ static status_t print_lex(FILE *fo, const char *lex, int base_code, int to_lower
     return ST_OK;
 }
 
-/* -a: преобразование лексем */
 static status_t cmd_a(const char *in, const char *out) {
+    if (same_file(in, out))
+        return ST_ERR_ARGC;
+
     FILE *fi = fopen(in, "r");
     if (!fi) return ST_ERR_OPEN;
     FILE *fo = fopen(out, "w");
@@ -227,6 +299,8 @@ int main(int argc, char *argv[]) {
 
     if (st != ST_OK) {
         switch (st) {
+            case ST_ERR_ARGC:         fprintf(stderr, "Error: input and output files must differ\n"); break;
+            case ST_ERR_FLAG:         fprintf(stderr, "Error: bad flag\n"); break;
             case ST_ERR_OPEN:         fprintf(stderr, "Error: cannot open file\n"); break;
             case ST_ERR_READ:         fprintf(stderr, "Error: read failed\n"); break;
             case ST_ERR_WRITE:        fprintf(stderr, "Error: write failed\n"); break;
